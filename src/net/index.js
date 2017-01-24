@@ -1,5 +1,6 @@
 var utils = require('../utils');
 var layers = require('../layers');
+var vol = require('../vol');
 
 // Net manages a set of layers
 // For now constraints: Simple linear order of layers, first layer input last layer a cost layer
@@ -101,6 +102,11 @@ Net.prototype = {
   // called from outside (not from the trainer), it defaults to prediction mode
   forward: function(V, is_training) {
     if(typeof(is_training) === 'undefined') is_training = false;
+
+    if (!V.sx) {
+      V = new vol(V);
+    }
+
     var act = this.layers[0].forward(V, is_training);
     for(var i=1;i<this.layers.length;i++) {
       act = this.layers[i].forward(act, is_training);
