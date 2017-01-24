@@ -1,7 +1,6 @@
 {
   "name": "neural-now-cnn",
   "version": "0.1.0",
-  "description": "",
   "main": "index.js",
   "directories": {
     "test": "test"
@@ -10,5 +9,14 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zach417/neural-now-cnn.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Zach417/neural-now-cnn/issues"
+  },
+  "homepage": "https://github.com/Zach417/neural-now-cnn#readme",
+  "description": ""
 }
