@@ -1,2 +1,5 @@
 examples/face-detection/FDDB-folds/
 examples/face-detection/originalPics/
+examples/face-detection/resizedPics/
+examples/face-detection/jsonPics/
+node_modules/

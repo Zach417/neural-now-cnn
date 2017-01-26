@@ -1,5 +1,5 @@
 var fs = require('fs');
-var cnn = require('../src');
+var cnn = require('../../src');
 
 console.log("Preparing training data set");
 var trainX = JSON.parse(fs.readFileSync(__dirname + "/trainX.json"));
