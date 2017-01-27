@@ -113,7 +113,7 @@ ConvLayer.prototype = {
       }
     }
   },
-  getParamsAndGrads: function() {
+  getParamsAndGrads: function () {
     var response = [];
     for(var i=0;i<this.out_depth;i++) {
       response.push({params: this.filters[i].w, grads: this.filters[i].dw, l2_decay_mul: this.l2_decay_mul, l1_decay_mul: this.l1_decay_mul});

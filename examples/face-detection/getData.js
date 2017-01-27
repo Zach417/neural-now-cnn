@@ -6,20 +6,18 @@ module.exports = function () {
   var testX = [];
   var testY = JSON.parse(fs.readFileSync(__dirname + "/testY.json"));
 
-  // 400 train
-  for (var i = 0; i < 400; i++) {
+  for (var i = 0; i < trainY.length; i++) {
     var y = trainY[i];
     var xPath = y.path.replace("resizedPics", "jsonPics") + ".json";
     var imgJson = JSON.parse(fs.readFileSync(xPath));
-    trainX.push(imgJson);
+    trainX.push(imgJson.pixels);
   }
 
-  // 100 test
-  for (var i = 0; i < 100; i++) {
+  for (var i = 0; i < testY.length; i++) {
     var y = testY[i];
     var xPath = y.path.replace("resizedPics", "jsonPics") + ".json";
     var imgJson = JSON.parse(fs.readFileSync(xPath));
-    testX.push(imgJson);
+    testX.push(imgJson.pixels);
   }
 
   return {

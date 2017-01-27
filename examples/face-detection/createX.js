@@ -20,7 +20,9 @@ function processImage (i) {
       var g = pixels.data[j + 1];
       var b = pixels.data[j + 2];
       var a = pixels.data[j + 3];
-      grayScale.push(Number(Number((r + g + b) / 3).toFixed(0)));
+      var avg = (r + g + b) / 3;
+      var norm = (avg / 255) - 0.5;
+      grayScale.push(Number(Number(norm).toFixed(4)));
 
       j += 3;
     }

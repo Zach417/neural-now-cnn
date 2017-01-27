@@ -10,14 +10,12 @@ var testX = data.testX;
 var testY = data.testY;
 
 var layer_defs = [];
-layer_defs.push({type:'input', out_sx: 100, out_sy: 200, out_depth: 1});
-layer_defs.push({type:'conv', sx:5, filters:16, stride:1, pad:2, activation:'relu'});
+layer_defs.push({type:'input', out_sx:100, out_sy:200, out_depth:1});
+layer_defs.push({type:'conv', sx:10, filters:8, stride:5, pad:2, activation:'relu'});
+layer_defs.push({type:'pool', sx:5, stride:5});
+layer_defs.push({type:'conv', sx:5, filters:10, stride:2, pad:2, activation:'relu'});
 layer_defs.push({type:'pool', sx:2, stride:2});
-layer_defs.push({type:'conv', sx:5, filters:20, stride:1, pad:2, activation:'relu'});
-layer_defs.push({type:'pool', sx:2, stride:2});
-layer_defs.push({type:'conv', sx:5, filters:20, stride:1, pad:2, activation:'relu'});
-layer_defs.push({type:'pool', sx:2, stride:2});
-layer_defs.push({type:'fc', num_neurons: 10, activation:'relu'});
+layer_defs.push({type:'fc', num_neurons:3, activation:'relu'});
 layer_defs.push({type:'regression', num_neurons:18}); // detects up to 3 faces
 
 console.log("Generating neural network");
@@ -28,8 +26,8 @@ net.fromJSON(json);
 
 var trainer = new cnn.trainer(net, {
   method: 'adadelta',
-  batch_size: 4,
-  l2_decay: 0.0001
+  batch_size: 20,
+  l2_decay: 0.0001,
 });
 
 function getY (trainY) {
@@ -53,7 +51,6 @@ function getY (trainY) {
       y[i] = 0;
     }
   }
-
   return y;
 }
 
@@ -62,9 +59,9 @@ var epochs = 100;
 for (var i = 0; i < epochs; i++) {
   var loss = 0;
   for (var j = 0; j < trainX.length; j++) {
-    var x = new cnn.vol(trainX[j]);
+    var x = new cnn.vol(100, 200, 1, 0);
+    x.w = trainX[j];
     var y = getY(trainY[j]);
-
     var stats = trainer.train(x, y);
     loss += stats.loss;
   }
@@ -82,10 +79,11 @@ var json = net.toJSON();
 fs.writeFileSync(__dirname + "/face-detection.json", JSON.stringify(json));
 
 console.log("\nTraining Set Predictions");
-var n = 15 / trainX.length;
+var n = 10 / trainX.length;
 for (var i = 0; i < trainX.length; i++) {
   if (Math.random() < n) {
-    var x = new cnn.vol(trainX[i]);
+    var x = new cnn.vol(100, 200, 1, 0);
+    x.w = trainX[i];
     var y = getY(trainY[i]);
     var yHat = net.forward(x).w;
     console.log("Actual: " + (y[5] + y[11] + y[17]) + "; Prediction: " + (yHat[5] + yHat[11] + yHat[17]));
@@ -93,12 +91,15 @@ for (var i = 0; i < trainX.length; i++) {
 }
 
 console.log("\nTesting Set Predictions");
-var n = 15 / testX.length;
+var n = 10 / testX.length;
 for (var i = 0; i < testX.length; i++) {
   if (Math.random() < n) {
-    var x = new cnn.vol(testX[i]);
+    var x = new cnn.vol(100, 200, 1, 0);
+    x.w = testX[i];
     var y = getY(testY[i]);
     var yHat = net.forward(x).w;
     console.log("Actual: " + (y[5] + y[11] + y[17]) + "; Prediction: " + (yHat[5] + yHat[11] + yHat[17]));
+    console.log(y);
+    console.log(yHat);
   }
 }
