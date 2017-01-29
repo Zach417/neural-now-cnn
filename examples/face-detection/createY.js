@@ -7,7 +7,7 @@ var readline = require('readline');
 var files = [];
 var result = [];
 
-var scale = 0.5;
+var scale = 1.0; // 0.5 - changed, let's see if it can still do it.
 var width = 100;
 var height = 200;
 

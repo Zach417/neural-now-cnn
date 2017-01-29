@@ -55,7 +55,7 @@ function getY (trainY) {
 }
 
 console.log("Beginning training");
-var epochs = 100;
+var epochs = 1000;
 for (var i = 0; i < epochs; i++) {
   var loss = 0;
   for (var j = 0; j < trainX.length; j++) {
