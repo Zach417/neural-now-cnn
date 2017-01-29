@@ -11,11 +11,11 @@ var lineReader = readline.createInterface({
 });
 
 lineReader.on('line', function (line) {
-if (line.startsWith("ham")) {
-  ham.push(line.split('\t')[1]);
-} else if (line.startsWith("spam")) {
-  spam.push(line.split('\t')[1]);
-}
+  if (line.startsWith("ham")) {
+    ham.push(line.split('\t')[1]);
+  } else if (line.startsWith("spam")) {
+    spam.push(line.split('\t')[1]);
+  }
 });
 
 lineReader.on('close', function () {

@@ -2,4 +2,10 @@ examples/face-detection/FDDB-folds/
 examples/face-detection/originalPics/
 examples/face-detection/resizedPics/
 examples/face-detection/jsonPics/
+examples/pascal-voc-2012/Annotations/
+examples/pascal-voc-2012/JPEGImages/
+examples/pascal-voc-2012/JSONImages/
+examples/pascal-voc-2012/RESIZEDImages/
+examples/pascal-voc-2012/SegmentationClass/
+examples/pascal-voc-2012/SegmentationObject/
 node_modules/
