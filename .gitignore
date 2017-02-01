@@ -9,3 +9,4 @@ examples/pascal-voc-2012/RESIZEDImages/
 examples/pascal-voc-2012/SegmentationClass/
 examples/pascal-voc-2012/SegmentationObject/
 node_modules/
+*.DS_Store
