@@ -32,16 +32,14 @@ module.exports = function () {
   var testX = [];
   var testY = [];
 
-  //for (var i = 0; i < _trainY.length; i++) {
-  for (var i = 0; i < 10.0; i++) {
+  for (var i = 0; i < 50; i++) {
     var y = _trainY[i];
     var imgJson = JSON.parse(fs.readFileSync(y.jsonPath));
     trainY.push(getY(y.category));
     trainX.push(imgJson);
   }
 
-  //for (var i = 0; i < _testY.length; i++) {
-  for (var i = 0; i < 1.5; i++) {
+  for (var i = 0; i < 10; i++) {
     var y = _testY[i];
     var imgJson = JSON.parse(fs.readFileSync(y.jsonPath));
     testY.push(getY(y.category));

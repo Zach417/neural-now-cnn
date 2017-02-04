@@ -30,6 +30,8 @@ var Trainer = function(net, options) {
 }
 
 Trainer.prototype = {
+  onBatchComplete: function () {},
+
   train: function(x, y) {
 
     var start = new Date().getTime();
@@ -136,16 +138,34 @@ Trainer.prototype = {
           g[j] = 0.0; // zero out gradient so that we can begin accumulating anew
         }
       }
+
+      this.onBatchComplete({
+        batchNumber: this.k / this.batch_size,
+        fwd_time: fwd_time,
+        bwd_time: bwd_time,
+        l2_decay_loss: l2_decay_loss,
+        l1_decay_loss: l1_decay_loss,
+        cost_loss: cost_loss,
+        softmax_loss: cost_loss,
+        loss: cost_loss + l1_decay_loss + l2_decay_loss
+      });
     }
 
     // appending softmax_loss for backwards compatibility, but from now on we will always use cost_loss
     // in future, TODO: have to completely redo the way loss is done around the network as currently
     // loss is a bit of a hack. Ideally, user should specify arbitrary number of loss functions on any layer
     // and it should all be computed correctly and automatically.
-    return {fwd_time: fwd_time, bwd_time: bwd_time,
-            l2_decay_loss: l2_decay_loss, l1_decay_loss: l1_decay_loss,
-            cost_loss: cost_loss, softmax_loss: cost_loss,
-            loss: cost_loss + l1_decay_loss + l2_decay_loss}
+    return {
+      batchNumber: Math.floor(this.k / this.batch_size) + 1,
+      batchProgress: (this.k % this.batch_size) / this.batch_size,
+      fwd_time: fwd_time,
+      bwd_time: bwd_time,
+      l2_decay_loss: l2_decay_loss,
+      l1_decay_loss: l1_decay_loss,
+      cost_loss: cost_loss,
+      softmax_loss: cost_loss,
+      loss: cost_loss + l1_decay_loss + l2_decay_loss
+    }
   }
 }
 

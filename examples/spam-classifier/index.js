@@ -8,12 +8,14 @@ var testX = JSON.parse(fs.readFileSync(__dirname + "/testX.json"));
 var testY = JSON.parse(fs.readFileSync(__dirname + "/testY.json"));
 
 var layer_defs = [];
-layer_defs.push({type:'input', out_sx: 48, out_sy: 48, out_depth: 2352});
-layer_defs.push({type:'conv', sx:5, filters:8, stride:1, pad:2, activation:'relu'});
+layer_defs.push({type:'input', out_sx: 49, out_sy: 49, out_depth: 1});
+layer_defs.push({type:'conv', sx:3, filters:4, stride:1, pad:2, activation:'relu'});
 layer_defs.push({type:'pool', sx:2, stride:2});
-layer_defs.push({type:'conv', sx:5, filters:16, stride:1, pad:2, activation:'relu'});
-layer_defs.push({type:'pool', sx:3, stride:3});
-layer_defs.push({type:'fc', num_neurons:5, activation:'sigmoid'});
+layer_defs.push({type:'conv', sx:3, filters:8, stride:1, pad:2, activation:'relu'});
+layer_defs.push({type:'pool', sx:2, stride:2});
+layer_defs.push({type:'conv', sx:3, filters:8, stride:1, pad:2, activation:'relu'});
+layer_defs.push({type:'pool', sx:2, stride:2});
+layer_defs.push({type:'fc', num_neurons:20, activation:'sigmoid'});
 layer_defs.push({type:'softmax', num_classes:2});
 
 console.log("Generating neural network");
@@ -28,6 +30,38 @@ var trainer = new cnn.trainer(net, {
   l2_decay: 0.001
 });
 
+function writeToFile () {
+  var json = net.toJSON();
+  var pathName = __dirname + "/spam-classifier.json";
+
+  // function round(value, decimals) {
+  //   return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
+  // }
+  //
+  // // set to fixed in order to save disk space
+  // for (var i = 0; i < json.layers.length; i++) {
+  //   var layer = json.layers[i];
+  //   if (layer.filters) {
+  //     for (var j = 0; j < layer.filters.length; j++) {
+  //       var filter = layer.filters[j];
+  //       for (var k = 0; k < filter.w.length; k++) {
+  //         filter.w[k] = round(filter.w[k], 6);
+  //       }
+  //     }
+  //   }
+  //   if (layer.biases) {
+  //     for (var j = 0; j < layer.biases.length; j++) {
+  //       var bias = layer.biases[j];
+  //       for (var k = 0; k < bias.w.length; k++) {
+  //         bias.w[k] = round(bias.w[k], 6);
+  //       }
+  //     }
+  //   }
+  // }
+
+  fs.writeFileSync(pathName, JSON.stringify(json));
+}
+
 console.log("Beginning training");
 var epochs = 20;
 for (var i = 0; i < epochs; i++) {
@@ -39,12 +73,14 @@ for (var i = 0; i < epochs; i++) {
   }
 
   if ((i * 10) % epochs == 0) {
-    console.log(loss / trainX.length);
+    console.log("Cost: " + Number(loss / trainX.length).toFixed(8) + " (" + Number(i/epochs*100).toFixed(2) + "%)               \r");
+    writeToFile();
+  } else {
+    process.stdout.write("Cost: " + Number(loss / trainX.length).toFixed(8) + " (" + Number(i/epochs*100).toFixed(2) + "%)               \r");
   }
 }
 
-var json = net.toJSON();
-fs.writeFileSync(__dirname + "/spam-classifier.json", JSON.stringify(json));
+writeToFile();
 
 var n = 15 / trainX.length;
 console.log("\nTraining Set Predictions");

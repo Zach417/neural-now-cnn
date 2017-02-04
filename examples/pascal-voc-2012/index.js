@@ -1,126 +1,81 @@
 var fs = require('fs');
 var cnn = require('../../src');
 var getData = require('./getData');
+var utils = require('./utils');
 
-function writeToFile (net) {
-  var json = net.toJSON();
-  fs.writeFileSync(__dirname + "/object-detection.json", JSON.stringify(json));
-}
-
-console.log("Preparing training data set");
-var data = getData();
-var trainX = data.trainX;
-var trainY = data.trainY;
-var testX = data.testX;
-var testY = data.testY;
-
-function shuffleData() {
-  var data = getData();
-  var trainX = data.trainX;
-  var trainY = data.trainY;
-  var testX = data.testX;
-  var testY = data.testY;
+var data, trainX, trainY, testX, testY;
+function shuffleData () {
+  process.stdout.write("Shuffling data\t\t\t\r");
+  data = getData();
+  trainX = data.trainX;
+  trainY = data.trainY;
+  testX = data.testX;
+  testY = data.testY;
 }
 
 var layer_defs = [];
-// layer_defs.push({type:'input', out_sx:225, out_sy:225, out_depth:3});
-// layer_defs.push({type:'conv', sx:11, filters:64, stride:4, pad:2, activation:'relu'});
-// layer_defs.push({type:'lrn', k:1, n:3, alpha:0.1, beta:0.75});
-// layer_defs.push({type:'pool', sx:7, stride:2});
-// layer_defs.push({type:'conv', sx:11, filters:128, stride:4, pad:2, activation:'relu'});
-// layer_defs.push({type:'lrn', k:1, n:3, alpha:0.1, beta:0.75});
-// layer_defs.push({type:'conv', sx:11, filters:256, stride:4, pad:2, activation:'relu'});
-// layer_defs.push({type:'lrn', k:1, n:3, alpha:0.1, beta:0.75});
-// layer_defs.push({type:'pool', sx:3, stride:1});
-// layer_defs.push({type:'dropout'});
-// layer_defs.push({type:'fc', num_neurons:1024, activation:'relu'});
-// layer_defs.push({type:'dropout'});
-// layer_defs.push({type:'fc', num_neurons:20, activation:'relu'});
-// layer_defs.push({type:'softmax', num_classes:20});
-layer_defs.push({type:'input', out_sx:225, out_sy:225, out_depth:3});
-layer_defs.push({type:'conv', sx:11, filters:64, stride:4, pad:2, activation:'relu'});
+layer_defs.push({type:'input', out_sx:224, out_sy:224, out_depth:3});
 layer_defs.push({type:'pool', sx:7, stride:2});
-layer_defs.push({type:'conv', sx:11, filters:128, stride:4, pad:2, activation:'relu'});
-layer_defs.push({type:'pool', sx:7, stride:2});
-layer_defs.push({type:'conv', sx:11, filters:256, stride:4, pad:2, activation:'relu'});
-layer_defs.push({type:'pool', sx:7, stride:2});
+layer_defs.push({type:'conv', sx:7, filters:16, stride:2, pad:2, activation:'relu'});
+layer_defs.push({type:'conv', sx:7, filters:32, stride:2, pad:2, activation:'relu'});
+layer_defs.push({type:'conv', sx:7, filters:32, stride:2, pad:2, activation:'relu'});
 layer_defs.push({type:'softmax', num_classes:20});
 
-console.log("Generating neural network");
 var json = JSON.parse(fs.readFileSync(__dirname + "/object-detection.json"));
 var net = new cnn.net();
 net.makeLayers(layer_defs);
 net.fromJSON(json);
 
 var trainer = new cnn.trainer(net, {
-  method: 'adagrad',
-  l2_decay: 0.001,
-  l1_decay: 0.001,
-  batch_size: 10
+  method: 'adadelta',
+  l2_decay: 0.5,
+  batch_size: 100,
 });
 
-function setVol (vol, _x) {
-  var image_dimension = 225;
-  var image_channels = 3;
+shuffleData();
 
-  var W = image_dimension * image_dimension;
-  var j = 0;
-  for(var dc = 0; dc < image_channels; dc++) {
-    var i = 0;
-    for(var xc = 0; xc < image_dimension; xc++) {
-      for(var yc = 0; yc < image_dimension; yc++) {
-        var ix = i * 4 + dc;
-        vol.set(yc,xc,dc,_x[ix]);
-        i++;
-      }
-    }
-  }
-}
+var epochs = 100;
+var batches = Math.floor(epochs * trainX.length / trainer.batch_size);
 
-console.log("Beginning training");
-var epochs = 500;
+trainer.onBatchComplete = function (stats) {
+  var loss = "Batch #" + stats.batchNumber + " Loss: " + Number(stats.loss).toFixed(8);
+  var progress = Number(stats.batchNumber/batches*100).toFixed(2) + "%";
+  console.log(loss + " (" + progress + ")\t\t\t\r");
+};
+
+console.log("Beginning training - " + batches + " Total Batches");
 for (var i = 0; i < epochs; i++) {
-  var loss = 0;
-  for (var j = 0; j < trainX.length; j++) {
-    var x = new cnn.vol(225, 225, 3, 0);
-    setVol(x, trainX[j]);
-    var y = trainY[j];
-    var stats = trainer.train(x, y);
-    loss += stats.loss;
-  }
-
   shuffleData();
 
-  if ((i * 10) % epochs == 0) {
-    console.log("Cost: " + Number(loss / trainX.length).toFixed(8) + " (" + Number(i/epochs*100).toFixed(2) + "%)               \r");
-    writeToFile(net);
-  } else {
-    process.stdout.write("Cost: " + Number(loss / trainX.length).toFixed(8) + " (" + Number(i/epochs*100).toFixed(2) + "%)               \r");
+  for (var j = 0; j < trainX.length; j++) {
+    var x = new cnn.vol(224, 224, 3, 0);
+    utils.setVol(x, trainX[j]);
+    var y = trainY[j];
+    var stats = trainer.train(x, y);
+    process.stdout.write("Batch #" + stats.batchNumber + ": " + Number(stats.batchProgress * 100).toFixed(2) + "%\t\t\t\r");
+  }
+
+  if (((i + 1) * 10) % epochs == 0) {
+    utils.writeToFile(net);
   }
 }
 
-writeToFile(net);
+utils.writeToFile(net);
 
-console.log("\nTraining Set Predictions");
-var n = 5 / trainX.length;
-for (var i = 0; i < trainX.length; i++) {
-  if (Math.random() < n) {
-    var x = new cnn.vol(225, 225, 3, 0);
-    setVol(x, trainX[i]);
-    var y = trainY[i];
-    var yHat = net.forward(x).w;
-    console.log("Actual: " + y + "; Prediction: " + yHat);
-  }
+console.log("\n\nTraining Set Predictions");
+for (var i = 0; i < 10; i++) {
+  var x = new cnn.vol(224, 224, 3, 0);
+  utils.setVol(x, trainX[i]);
+  var y = trainY[i];
+  var yHat = net.forward(x).w;
+  console.log(utils.yToString(y) + "\t ---> " + utils.yHatToString(yHat));
 }
 
 console.log("\nTesting Set Predictions");
-var n = 5 / testX.length;
-for (var i = 0; i < testX.length; i++) {
-  if (Math.random() < n) {
-    var x = new cnn.vol(225, 225, 3, 0);
-    setVol(x, testX[i]);
-    var y = testY[i];
-    var yHat = net.forward(x).w;
-    console.log("Actual: " + y + "; Prediction: " + yHat);
-  }
+for (var i = 0; i < 10; i++) {
+  var x = new cnn.vol(224, 224, 3, 0);
+  utils.setVol(x, testX[i]);
+  var y = testY[i];
+  var yHat = net.forward(x).w;
+  console.log(utils.yToString(y) + "\t ---> " + utils.yHatToString(yHat));
 }
